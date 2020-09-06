@@ -76,16 +76,119 @@ GET ...
 POST ...
 DELETE ...
 
-GET '/categories'
-- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
+GET '/api/categories'
+- Fetches an array of categories and each category is a dictionary in which there is a key for the id and one for the value that is the corresponding string of the category
 - Request Arguments: None
-- Returns: An object with a single key, categories, that contains a object of id: category_string key:value pairs. 
-{'1' : "Science",
-'2' : "Art",
-'3' : "Geography",
-'4' : "History",
-'5' : "Entertainment",
-'6' : "Sports"}
+- Returns: An object with some keys: categories that contains an array of category objects of {id, type} and success: for indicating that request is handled correctly if true and false if otherwise.
+{
+    'success': True,
+    'categories':[
+                {'id':'1', 'type' : "Science"},
+                {'id':'2', 'type' : "Art"},
+                {'id':'3' , 'type' : "Geography"},
+                {'id':'4' , 'type' : "History"},
+                {'id':'5' , 'type': "Entertainment"},
+                {'id':'6' , 'type': "Sports"}
+                ]
+}
+
+
+GET '/api/questions?page=1'
+- Fetches an array of all available questions in which each question is a dictionary that has keys for the question and one for the answer, category and the difficulty level and all available categories in which each category a dictionary that has a key for the id and one for the value that is the corresponding string of the category and total_questions which indicates the total number of stored questions.
+- Request Arguments: page used for pagination i.e. /api/questions?page=1 to get the first page of questions that has 10 questions at max.
+- Returns: An object with some keys: categories that contains an array of category objects, questions that has an array of questions objects, total_questions contains the count of all stored questions, success: for indicating that request is handled correctly if true and false if otherwise.
+{
+    'success': True,
+    'categories': [
+                {'id':'1', 'type' : "Science"},
+                {'id':'2', 'type' : "Art"},
+                ],
+    'questions': [
+                {'id':'1', 'question':'what is the color of sky', 'answer':'blue',  'category' : 'Science', 'difficulty':1},
+                ],
+    'total_questions': 15
+}
+
+
+POST '/api/questions'
+- creates a new question that has keys for the question and one for the answer, category and the difficulty level.
+- Request Arguments: the following body structure as json object: 
+{ 
+'question':'question title',
+'answer':'answer text',
+'category': 5,
+'difficulty': 1
+}.
+- Returns: An object with a single key: success for indicating that request is handled correctly if true and false if otherwise.
+{
+    'success': True,
+}
+
+
+POST '/api/questions/search'
+- searches questions titles using a word(color).
+- Request Arguments: the following body structure as json object: 
+{ 
+'searchTerm':'color',
+}.
+- Returns: An object with some keys: questions that has an array of questions objects that contains the search term or word, total_questions contains the count of search result questions, success: for indicating that request is handled correctly if true and false if otherwise.
+{
+    'success': True,
+    'questions': [ {'id':'1', 'question':'what is the color of sky', 'answer':'blue',  'category' : 'Science', 'difficulty':1},],
+    'total_questions': 5,
+}
+
+
+GET '/api/categories/<category>/questions?page=1'
+- Fetches an array of a specific category questions in which each question is a dictionary that has keys for the question and one for the answer, category and the difficulty level and all available categories in which each category a dictionary that has a key for the id and one for the value that is the corresponding string of the category and total_questions which indicates the total number of stored questions.
+- Request Arguments: category for category id and page used for pagination i.e. /api/categories/<category>/questions?page=1 to get the first page of questions that has 10 questions at max.
+- Returns: An object with some keys: questions that has an array of questions objects, total_questions contains the count of all stored questions, success: for indicating that request is handled correctly if true and false if otherwise.
+{
+    'success': True,
+    'questions': [
+                {'id':'1', 'question':'what is the color of sky', 'answer':'blue',  'category' : 'Science', 'difficulty':1},
+                ],
+    'total_questions': 15
+}
+
+
+POST '/api/quizzes'
+- gets a random question from all stored questions or a specific categories and not a one from the previous questions passed as a parameter in the request.
+- Request Arguments: the following body structure as json object: previous_questions is a list of all previous questions that user answered before in the quiz and quiz_category is the id of the category to get the questions from and if it's value is 0 the question is returned randomly from any category.
+{ 
+'previous_questions': [5, 6, 7],
+'quiz_category': 0
+}.
+- Returns: An object with some keys: question that has a question object, success: for indicating that request is handled correctly if true and false if otherwise.
+{
+    'success': True,
+    'question': {'id':'1', 'question':'what is the color of sky', 'answer':'blue',  'category' : 'Science', 'difficulty':1}
+}
+
+Errors:
+
+in case of a bad request sent to any of the api endpoints, it will respond with a 400 status code and body with the following json object:
+{
+    "success": False, 
+    "error": 400,
+    "message": "Bad request"
+}
+
+
+in case of a request sent to any of the api endpoints and it's not exist, it will respond with a 404 status code and body with the following json object:
+{
+    "success": False, 
+    "error": 404,
+    "message": "Not found"
+}
+
+
+in case of a request sent to any of the api endpoints and it's not processable on the server, it will respond with a 422 status code and body with the following json object:
+{
+    "success": False, 
+    "error": 422,
+    "message": "Unprocessable request"
+}
 
 ```
 
