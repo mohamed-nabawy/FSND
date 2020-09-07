@@ -62,7 +62,9 @@ def create_app(test_config=None):
     page = request.args.get("page", 1, type=int)
     start = (page-1) * QUESTIONS_PER_PAGE
     end = start + QUESTIONS_PER_PAGE
+    # formatting question object into dictionary
     all_questions = [ question.format() for question in all_questions]
+    # slicing all questions list page
     current_questions = all_questions[start:end]
     return current_questions
 
@@ -72,7 +74,7 @@ def create_app(test_config=None):
     current_questions = paginate_questions(request, all_questions)
     categories = Category.query.all()
     categories = [ category.format() for category in categories]
-
+    # return not found response if no question in db
     if(len(current_questions) == 0):
       abort(404)
       
@@ -112,11 +114,13 @@ def create_app(test_config=None):
   def create_question():
     question = request.get_json().get('question', '')        
     answer = request.get_json().get('answer', '')
+    # check if question or answer are empty
     if not question or not answer:
       abort(422)
     difficulty = request.get_json().get('difficulty', 1)
     category_id = request.get_json().get('category', 0)
     category = Category.query.get(category_id)
+    # check if category in db
     if category is None:
       abort(422)
 
@@ -139,10 +143,12 @@ def create_app(test_config=None):
   @app.route('/api/questions/search', methods=['POST'])
   def search_questions():
     term = request.get_json().get('searchTerm', '')
+    # check if search term is not empty
     if not term:
       abort(404)
     all_questions = Question.query.filter(Question.question.ilike("%"+term.strip()+"%")).all()
     current_questions = paginate_questions(request, all_questions)
+    # return not found response if no question found in db
     if len(current_questions) == 0:
       abort(404)
       
@@ -191,11 +197,13 @@ def create_app(test_config=None):
       previous_questions = request.get_json().get('previous_questions', []) 
       category = request.get_json().get('quiz_category')
       category = category["id"]
+      # 0 means any category
       if category==0:
         questions = Question.query.filter(Question.id.notin_(previous_questions)).all()
       else:
         questions = Question.query.filter(Question.category==category, Question.id.notin_(previous_questions)).all()
       
+      # get random question and format into a dictionary
       if len(questions) > 0:
         question = random.choice(questions)
         question = question.format()
