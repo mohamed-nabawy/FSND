@@ -110,17 +110,22 @@ def create_app(test_config=None):
   '''
   @app.route('/api/questions', methods=['POST'])
   def create_question():
-    try:
-      question = request.get_json().get('question', '') 
-      answer = request.get_json().get('answer', '') 
-      difficulty = request.get_json().get('difficulty', '') 
-      category = request.get_json().get('category', '') 
-      Question(question, answer, category, difficulty)
-      return jsonify({
-        'success': True,
-      })
-    except:
-      abort(400)
+    question = request.get_json().get('question', '')        
+    answer = request.get_json().get('answer', '')
+    if not question or not answer:
+      abort(422)
+    difficulty = request.get_json().get('difficulty', 1)
+    category_id = request.get_json().get('category', 0)
+    category = Category.query.get(category_id)
+    if category is None:
+      abort(422)
+
+    Question(question, answer, category_id, difficulty)
+    return jsonify({
+      'success': True,
+    })
+  
+
   '''
   @TODO: 
   Create a POST endpoint to get questions based on a search term. 
@@ -134,18 +139,19 @@ def create_app(test_config=None):
   @app.route('/api/questions/search', methods=['POST'])
   def search_questions():
     term = request.get_json().get('searchTerm', '')
+    if not term:
+      abort(404)
     all_questions = Question.query.filter(Question.question.ilike("%"+term.strip()+"%")).all()
     current_questions = paginate_questions(request, all_questions)
-
-    if(len(current_questions) == 0):
+    if len(current_questions) == 0:
       abort(404)
       
     return jsonify({
       'success': True,
-       'questions': current_questions,
-       'total_questions': len(all_questions),
+      'questions': current_questions,
+      'total_questions': len(all_questions),
     })
-
+ 
   '''
   @TODO: 
   Create a GET endpoint to get questions based on category. 
@@ -181,27 +187,28 @@ def create_app(test_config=None):
   '''
   @app.route('/api/quizzes', methods=['POST'])
   def play_quiz():
-    # try:
-    previous_questions = request.get_json().get('previous_questions', '') 
-    category = request.get_json().get('quiz_category')
-    category = category["id"]
-    if category==0:
-      questions = Question.query.filter(Question.id.notin_(previous_questions)).all()
-    else:
-      questions = Question.query.filter(Question.category==category, Question.id.notin_(previous_questions)).all()
-    
-    if len(questions) > 0:
-      question = random.choice(questions)
-      question = question.format()
-    else:
-      question = False
+    try:
+      previous_questions = request.get_json().get('previous_questions', []) 
+      category = request.get_json().get('quiz_category')
+      category = category["id"]
+      if category==0:
+        questions = Question.query.filter(Question.id.notin_(previous_questions)).all()
+      else:
+        questions = Question.query.filter(Question.category==category, Question.id.notin_(previous_questions)).all()
+      
+      if len(questions) > 0:
+        question = random.choice(questions)
+        question = question.format()
+      else:
+        question = False
 
-    return jsonify({
-      'success': True,
-      'question': question
-    })
-    # except:
-    #   abort(404)
+      return jsonify({
+        'success': True,
+        'question': question
+      })
+    except:
+      abort(422)
+
   '''
   @TODO: 
   Create error handlers for all expected errors 
