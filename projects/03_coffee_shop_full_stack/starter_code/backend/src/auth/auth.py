@@ -47,7 +47,7 @@ def get_token_auth_header():
         raise AuthError({"code": "invalid_header",
                         "description": "Authorization header must start with Bearer"},
                         401)
-    elif len(parts) == 1:
+    elif len(parts) < 2 :
         raise AuthError({"code": "invalid_header",
                         "description": "Token not found"}, 401)
     elif len(parts) > 2:
